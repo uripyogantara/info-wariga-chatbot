@@ -3,7 +3,7 @@ import pymysql
 from nltk.tokenize import MWETokenizer
 
 
-msg=input()
+msg=input("masukan pertanyaan: ")
 msg=re.sub(r'[^\w]', ' ', msg)
 tokenizer=MWETokenizer()
 tokenizer.add_mwe(("buda","wage"))
