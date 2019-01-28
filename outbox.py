@@ -1,8 +1,10 @@
-import sys
 import time
 import telepot
-import pymysql
-import mysql.connector as mc
+from connector import connector
+
+
+connection=connector().get_connection_object()
+cursor = connection.cursor()
 
 def sendFileMsg(fname, chat_id):
     doc = open(fname,'rb')
@@ -10,9 +12,8 @@ def sendFileMsg(fname, chat_id):
     bot.sendDocument(chat_id, doc)
 
 def out_tele():
-    conn.commit()
-    cur.execute("SELECT * FROM tb_outbox WHERE flag='1'")
-    for row in cur.fetchall():
+    cursor.execute("SELECT * FROM tb_outbox WHERE flag='1'")
+    for row in cursor.fetchall():
         chat_id = row[2]
         out_msg = row[3]
         msg_type = row[4]
@@ -23,20 +24,15 @@ def out_tele():
         else:
             sendFileMsg(out_msg, chat_id)
 
-        cur.execute("UPDATE tb_outbox SET flag='2' WHERE id_outbox='%s'" % row[0])
-        conn.commit()
+        cursor.execute("UPDATE tb_outbox SET flag='2' WHERE id_outbox='%s'" % row[0])
+        connection.commit()
+    connection.rollback()
 
 
-TOKEN ='6eS0'
+TOKEN ='796693170:AAFb0M0YAuRMJgz83eus-Qfv_uPDgR5BKUY'
 bot = telepot.Bot(TOKEN)
 print ('Reading ...')
 
 while 1:
-    try:
-        conn = mc.connect(host='localhost', user='root', passwd='root', db='mca')
-        cur = conn.cursor()
-    except:
-        print('db mati')
-
     out_tele()
     time.sleep(1)
