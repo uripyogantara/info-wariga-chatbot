@@ -38,9 +38,6 @@ class response:
         entities=enr.get_entities()
         result=enr.get_enr()
 
-        # return "tes"
-
-        # pprint(result)
         intent=None
         responses=[]
         # for val in values:
@@ -54,10 +51,6 @@ class response:
         )
         for key in result:
             val=result[key]
-            # if val =="when":
-            #     responses[0]["intent"]="search_when"
-            # else:
-
             if val=="when":
                 intent="search_when"
                 for item in responses:
