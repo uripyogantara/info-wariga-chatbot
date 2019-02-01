@@ -1,10 +1,10 @@
 import time
+import datetime
 import telepot
 from connector import connector
 
 
-connection=connector().get_connection_object()
-cursor = connection.cursor()
+
 
 def sendFileMsg(fname, chat_id):
     doc = open(fname,'rb')
@@ -13,6 +13,7 @@ def sendFileMsg(fname, chat_id):
 
 def out_tele():
     cursor.execute("SELECT * FROM tb_outbox WHERE flag='1'")
+
     for row in cursor.fetchall():
         chat_id = row[2]
         out_msg = row[3]
@@ -24,15 +25,24 @@ def out_tele():
         else:
             sendFileMsg(out_msg, chat_id)
 
-        cursor.execute("UPDATE tb_outbox SET flag='2' WHERE id_outbox='%s'" % row[0])
-        connection.commit()
+        try:
+            cursor.execute("UPDATE tb_outbox SET flag='2' WHERE id_outbox='%s'" % row[0])
+            connection.commit()
+        except:
+            print("Error Update")
     connection.rollback()
 
+if __name__ == '__main__':
+    TOKEN = '796693170:AAFb0M0YAuRMJgz83eus-Qfv_uPDgR5BKUY'
+    bot = telepot.Bot(TOKEN)
+    print('Reading ...')
 
-TOKEN ='796693170:AAFb0M0YAuRMJgz83eus-Qfv_uPDgR5BKUY'
-bot = telepot.Bot(TOKEN)
-print ('Reading ...')
-
-while 1:
-    out_tele()
-    time.sleep(1)
+    connection = connector().get_connection_object()
+    cursor = connection.cursor()
+    while 1:
+        try:
+            out_tele()
+            time.sleep(1)
+        except:
+            connection.reconnect(attempts=1, delay=0)
+            print("exception, reconnect")
