@@ -1,80 +1,190 @@
+from connector import connector
 import re
-import pymysql
 from nltk.tokenize import MWETokenizer
+from pprint import pprint
+
+class nlp:
+    def __init__(self):
+        self.connection=connector().get_connection_object()
+        self.cursor=self.connection.cursor(dictionary=True)
+        self.cursor.execute("SELECT * FROM tag")
+        data = self.cursor.fetchall()
+
+        self.__set_entities(data=data)
+
+        self.cursor.execute("SELECT * FROM basis_pengetahuan")
+
+        data = self.cursor.fetchall()
+
+        self._basis_pengetahuan = {}
+        for item in data:
+            self._basis_pengetahuan[item["nama"]] = item["sql"]
+
+        self.cursor.execute("SELECT * FROM basis_pengetahuan_apa")
+
+        data = self.cursor.fetchall()
+
+        self._basis_pengetahuan_apa = {}
+        for item in data:
+            self._basis_pengetahuan_apa[item["nama"]] = item["deskripsi"]
+
+        self.cursor.execute("SELECT * FROM padanan")
+
+        data = self.cursor.fetchall()
+
+        self._padanan = {}
+        for item in data:
+            self._padanan[item["value"]] = item["default"]
 
 
-msg=input("masukan pertanyaan: ")
-msg=re.sub(r'[^\w]', ' ', msg)
-tokenizer=MWETokenizer()
-tokenizer.add_mwe(("buda","wage"))
-token=tokenizer.tokenize(msg.split())
+    def __set_entities(self,data):
+        entities={}
+        for item in data:
+            # print(item)
+            entities[item["word"]]=item["tag"]
 
-connection = pymysql.connect(host='localhost',
-                             user='root',
-                             password='',
-                             db='kalender_bali',
-                             charset='utf8mb4',
-                             cursorclass=pymysql.cursors.DictCursor)
+        self._entities=entities
 
-cursor=connection.cursor()
+    def __tokenize(self,msg):
+        msg = re.sub(r'[^\w]', ' ', msg)
+        tokenizer = MWETokenizer()
+        tokenizer.add_mwe(("buda", "wage"))
+        token = tokenizer.tokenize(msg.split())
+        return token
 
-hari_raya={
-    'kuningan':26,
-    'galungan':19,
-    'saraswati':42
-}
-# print(token)
-def check_hari_raya(word):
-    hari_raya=["galungan","kuningan","saraswati"]
+    def __get_enr(self,tokens):
+        enr = {}
+        for token in tokens:
+            if token in self._entities:
+                enr[token] = self._entities[token]
+            elif re.match("\d{4}$", token):
+                enr[token] = "tahun"
+        return enr
 
-    if word in hari_raya:
-        return True
-    else:
-        return False
+    def __get_padanan(self,value):
+        if value in self._padanan:
+            return self._padanan[value]
+        else:
+            return value
 
-def check_bulan(word):
-    bulan=["januari","februari","maret","april","mei","juni","juli","agustus"]
-    if word in bulan:
-        return True
-    else:
-        return False
+    def __get_response(self,result):
+        intent = None
+        responses = []
+        # for val in values:
+        index = -1
+        # response=
+        responses.append(
+            {
+                "intent": intent,
+                "entities": {}
+            }
+        )
+        negation = False
+        for key in result:
+            val = result[key]
+            if val == "when":
+                intent = "search_when"
 
+                # check apabila search_when ada di akhir maka seluruh intent yang None terupdate
+                for item in responses:
+                    if item["intent"] is None:
+                        item["intent"] = intent
+            elif val == "what":
+                intent = "search_what"
 
+                # check apabila search_when ada di akhir maka seluruh intent yang None terupdate
+                for item in responses:
+                    if item["intent"] is None:
+                        item["intent"] = "search_what"
+            elif val == "hari_raya":
 
-responses=[]
-entities={}
-intent=None
-response={}
-for word in token:
-    if check_hari_raya(word):
-        if intent is not None:
-            responses.append(response.copy())
-            response={}
-            entities={}
-        intent='search_hari_raya'
-        entities['hari_raya']=word
+                # apabila menemukan hari raya maka akan membuat array baru
+                index += 1
+                if (index >= len(responses)):
+                    responses.append({
+                        "intent": intent,
+                        "entities": {}
+                    })
+                responses[index]["hari_raya"] = key
+                negation = False
+            elif val == "dewasa_ayu":
 
-    if check_bulan(word):
-        entities['bulan']=word
-    response={
-        'intent':intent,
-        'entities':entities
-    }
+                # apabila menemukan hari raya maka akan membuat array baru
+                index += 1
+                if (index >= len(responses)):
+                    responses.append({
+                        "intent": intent,
+                        "entities": {}
+                    })
+                responses[index]["dewasa_ayu"] = key
+                negation = False
+            elif val in ["negation"]:
+                negation = True
 
-    # print(word,response)
-responses.append(response.copy())
-# print(responses)
+            if val not in ["what", "when", "hari_raya", "dewasa_ayu", "negation"]:
+                if val in responses[index]["entities"]:
+                    responses[index]["entities"][val]["data"].append(key)
+                else:
+                    responses[index]["entities"][val] = {
+                        "data": [key],
+                        "negation": negation
+                    }
+        return responses
 
-for response in responses:
-    # print(response)
-    index=response['entities']['hari_raya']
-    sql="CALL searchHariRaya(%s,2019)"%hari_raya[index]
-    # print(sql)
-    cursor.execute(sql)
+    def __result(self,responses):
+        hasil = []
 
-    results=cursor.fetchall()
+        for response in responses:
+            if (response["intent"] == "search_when"):
+                sql = "SELECT * FROM kalender WHERE tanggal>DATE(NOW())"
 
-    for result in results:
-        print(index+" : "+result['tanggal'].strftime("%Y-%m-%d"))
+                if "hari_raya" in response:
+                    sql += " and " + self._basis_pengetahuan[response["hari_raya"]]
+                elif "dewasa_ayu" in response:
+                    sql += " and " + self._basis_pengetahuan[response["dewasa_ayu"]]
+                for entity in response["entities"]:
+                    data = self.__join(response["entities"][entity]["data"])
+
+                    if response["entities"][entity]["negation"]==True:
+                        sql += " and %s not in (%s)" % (entity, data)
+                    else:
+                        sql += " and %s in (%s)" % (entity, data)
+                print(sql)
+                reply = self.__get_reply(sql)
+                hasil.append(str(reply["tanggal"]))
+            elif (response["intent"] == "search_what"):
+                hari_raya = ""
+                if "hari_raya" in response:
+                    hari_raya=self._basis_pengetahuan_apa[response['hari_raya']]
+                hasil.append(hari_raya)
+                # print(response)
+
+        return hasil
+
+    def __join(self,data):
+        sql = ""
+        for i, item in enumerate(data):
+            item = "'" + self.__get_padanan(item) + "'"
+            if i < len(data) - 1:
+                sql += item + ","
+            else:
+                sql += item
+        return sql
+
+    def __get_reply(self,sql):
+        self.cursor.execute(sql)
+        data=self.cursor.fetchone()
+        self.connection.rollback()
+        return data
+
+    def get_reply(self,msg):
+        token=self.__tokenize(msg)
+        # print(token)
+        enr = self.__get_enr(token)
+        responses = self.__get_response(enr)
+
+        # pprint(responses)
+        result=self.__result(responses)
+        return result
 
 

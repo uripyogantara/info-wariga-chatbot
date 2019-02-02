@@ -15,9 +15,9 @@ def out_tele():
     cursor.execute("SELECT * FROM tb_outbox WHERE flag='1'")
 
     for row in cursor.fetchall():
-        chat_id = row[2]
-        out_msg = row[3]
-        msg_type = row[4]
+        chat_id = row["chat_id"]
+        out_msg = row["out_msg"]
+        msg_type = row["type"]
 
         if msg_type == 'msg':
             pesan = bot.sendMessage(chat_id, out_msg)
@@ -26,7 +26,7 @@ def out_tele():
             sendFileMsg(out_msg, chat_id)
 
         try:
-            cursor.execute("UPDATE tb_outbox SET flag='2' WHERE id_outbox='%s'" % row[0])
+            cursor.execute("UPDATE tb_outbox SET flag='2' WHERE id_outbox='%s'" % row["id_outbox"])
             connection.commit()
         except:
             print("Error Update")
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     print('Reading ...')
 
     connection = connector().get_connection_object()
-    cursor = connection.cursor()
+    cursor = connection.cursor(dictionary=True)
     while 1:
         try:
             out_tele()
