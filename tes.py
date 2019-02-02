@@ -4,10 +4,12 @@ import re
 
 from nltk.tokenize import MWETokenizer
 
-entities = Enr().get_entities()
+
 
 # print(entities)
-
+enr= Enr()
+entities = enr.get_entities()
+basis_hari_raya=enr.get_basis_hari_raya()
 def get_enr(tokens):
     enr={}
     for token in tokens:
@@ -81,20 +83,56 @@ def get_response(result):
                 }
     return responses
 
+def result(responses):
+    hasil = []
+    for response in responses:
+        if (response["intent"] == "search_when"):
+            sql = "SELECT * FROM kalender WHERE tanggal>DATE(NOW())"
+
+            if "hari_raya" in response:
+                print("cari hari raya %s"%(response["hari_raya"]))
+                sql+=" and "+basis_hari_raya[response["hari_raya"]]
+            elif "dewasa_ayu" in response:
+                print("cari dewasa %s"%(response["dewasa_ayu"]))
+            for entity in response["entities"]:
+                # if response["entities"][entity]["negation"]:
+
+                data=join(response["entities"][entity]["data"])
+                sql+=" and %s in (%s)"%(entity,data)
+                # print(data)
+                # print(response["entities"][entity])
+            # print(sql)
+            reply=enr.get_reply(sql)
+            print(reply)
+        elif (response["intent"] == "search_what"):
+            hari_raya = ""
+            for entity in response["entities"]:
+                if response["entities"][entity] == "hari_raya":
+                    hari_raya = entity
+            hasil.append("kamu menanyakan apa %s" % hari_raya)
+            print(response)
+
+    return hasil
+
+def join(data):
+    sql=""
+    for i,item in enumerate(data):
+        item="'"+enr.get_padanan(item)+"'"
+        if i<len(data)-1:
+            sql+=item+","
+        else:
+            sql+=item
+    return sql
+
 def main():
-    msg = "kapan galungan juni juli 2019 bukan soma anggara , nikah januari maret wrespati jangan 2020 2025"
+    msg = "kapan siwalatri tahun 2021,2020 bukan senin selasa"
     msg = re.sub(r'[^\w]', ' ', msg)
     tokenizer = MWETokenizer()
     tokenizer.add_mwe(("buda", "wage"))
     token = tokenizer.tokenize(msg.split())
     enr = get_enr(token)
-
-    # print(enr)
-
-    response=get_response(enr)
-    pprint(response)
-
-
+    responses=get_response(enr)
+    result(responses)
 
 
 if __name__== "__main__":

@@ -80,7 +80,6 @@ class response:
         for response in responses:
             if(response["intent"]=="search_when"):
                 sql="SELECT * FROM kalender WHERE tanggal>DATE(NOW())"
-                first=True
                 for entity in response["entities"]:
                     if response["entities"][entity]=="hari_raya":
                         sql_temp=self._search_when[entity]
