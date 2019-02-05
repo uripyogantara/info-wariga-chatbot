@@ -143,7 +143,7 @@ class nlp:
 
             if val not in ["what", "when", "hari_raya", "dewasa_ayu", "negation","greeting"]:
                 print(responses[index]["intent"],key)
-                if responses[index]["intent"]!="search_when" and responses[index]["intent"]is not None:
+                if responses[len(responses)-1]["intent"]=="greeting":
                     print("append")
                     responses.append({
                         "intent": None,
