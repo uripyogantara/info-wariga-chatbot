@@ -2,6 +2,7 @@ from connector import connector
 import re
 from nltk.tokenize import MWETokenizer
 from pprint import pprint
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
 class nlp:
     def __init__(self):
@@ -52,6 +53,14 @@ class nlp:
             entities[item["word"]]=item["tag"]
 
         self._entities=entities
+
+    def __stemming(self,msg):
+        factory = StemmerFactory()
+        stemmer = factory.create_stemmer()
+
+        output = stemmer.stem(msg)
+
+        return output
 
     def __tokenize(self,msg):
         msg = re.sub(r'[^\w]', ' ', msg)
@@ -133,10 +142,19 @@ class nlp:
                 negation = True
 
             if val not in ["what", "when", "hari_raya", "dewasa_ayu", "negation","greeting"]:
-                if val in responses[index]["entities"]:
-                    responses[index]["entities"][val]["data"].append(key)
+                print(responses[index]["intent"],key)
+                if responses[index]["intent"]!="search_when" and responses[index]["intent"]is not None:
+                    print("append")
+                    responses.append({
+                        "intent": None,
+                        "entities": {}
+                    })
+                    # print(responses)
+
+                if val in responses[len(responses)-1]["entities"]:
+                    responses[len(responses)-1]["entities"][val]["data"].append(key)
                 else:
-                    responses[index]["entities"][val] = {
+                    responses[len(responses)-1]["entities"][val] = {
                         "data": [key],
                         "negation": negation
                     }
@@ -160,7 +178,7 @@ class nlp:
                         sql += " and %s not in (%s)" % (entity, data)
                     else:
                         sql += " and %s in (%s)" % (entity, data)
-                # print(sql)
+                print(sql)
                 reply = self.__get_reply(sql)
                 hasil.append(str(reply["tanggal"]))
             elif (response["intent"] == "search_what"):
@@ -193,12 +211,15 @@ class nlp:
         return data
 
     def get_reply(self,msg):
-        token=self.__tokenize(msg)
-        # print(token)
+
+        stemming=self.__stemming(msg)
+        print(stemming)
+        token=self.__tokenize(stemming)
+        print(token)
         enr = self.__get_enr(token)
         responses = self.__get_response(enr)
 
-        # pprint(responses)
+        pprint(responses)
         result=self.__result(responses)
         return result
 

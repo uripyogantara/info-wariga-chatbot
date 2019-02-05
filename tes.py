@@ -1,6 +1,6 @@
 from nlp import nlp
 def main():
-    msg = "suksma"
+    msg = "kapan galungan, kuningan"
     # msg.tolow
     tes=nlp()
     hasil=tes.get_reply(msg)
