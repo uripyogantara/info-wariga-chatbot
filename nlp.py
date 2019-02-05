@@ -28,6 +28,14 @@ class nlp:
         for item in data:
             self._basis_pengetahuan_apa[item["nama"]] = item["deskripsi"]
 
+        self.cursor.execute("SELECT * FROM basis_pengetahuan_greeting")
+
+        data = self.cursor.fetchall()
+
+        self._basis_pengetahuan_greeting= {}
+        for item in data:
+            self._basis_pengetahuan_greeting[item["nama"]] = item["response"]
+
         self.cursor.execute("SELECT * FROM padanan")
 
         data = self.cursor.fetchall()
@@ -96,8 +104,11 @@ class nlp:
                 for item in responses:
                     if item["intent"] is None:
                         item["intent"] = "search_what"
+            elif val == "greeting":
+                index+=1
+                responses[index]["intent"]="greeting"
+                responses[index]["greeting"] = key
             elif val == "hari_raya":
-
                 # apabila menemukan hari raya maka akan membuat array baru
                 index += 1
                 if (index >= len(responses)):
@@ -121,7 +132,7 @@ class nlp:
             elif val in ["negation"]:
                 negation = True
 
-            if val not in ["what", "when", "hari_raya", "dewasa_ayu", "negation"]:
+            if val not in ["what", "when", "hari_raya", "dewasa_ayu", "negation","greeting"]:
                 if val in responses[index]["entities"]:
                     responses[index]["entities"][val]["data"].append(key)
                 else:
@@ -149,7 +160,7 @@ class nlp:
                         sql += " and %s not in (%s)" % (entity, data)
                     else:
                         sql += " and %s in (%s)" % (entity, data)
-                print(sql)
+                # print(sql)
                 reply = self.__get_reply(sql)
                 hasil.append(str(reply["tanggal"]))
             elif (response["intent"] == "search_what"):
@@ -158,6 +169,10 @@ class nlp:
                     hari_raya=self._basis_pengetahuan_apa[response['hari_raya']]
                 hasil.append(hari_raya)
                 # print(response)
+            elif (response["intent"] == "greeting"):
+                greeting=self._basis_pengetahuan_greeting[response['greeting']]
+                # print(response["greeting"])
+                hasil.append(greeting)
 
         return hasil
 

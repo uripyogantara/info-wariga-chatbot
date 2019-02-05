@@ -13,13 +13,22 @@ def handle(msg):
     if content_type == 'text':
         pesan = msg['text'].lower()
         print(chat_id, pesan)
-        cursor.execute("INSERT INTO tb_inbox (chat_id, in_msg) VALUES ('%s', '%s')" %
-                    (chat_id, pesan))
-        connection.commit()
-        print(content_type, chat_type, chat_id, msg['message_id'])
 
-bot= telepot.Bot("796693170:AAFb0M0YAuRMJgz83eus-Qfv_uPDgR5BKUY")
+        done=False
 
+        while not done:
+            try:
+                cursor.execute("INSERT INTO tb_inbox (chat_id, in_msg) VALUES ('%s', '%s')" %
+                               (chat_id, pesan))
+                connection.commit()
+                print(content_type, chat_type, chat_id, msg['message_id'])
+                done=True
+            except:
+                connection.reconnect(attempts=1, delay=0)
+                print("exception, reconnect")
+
+TOKEN = '796693170:AAFb0M0YAuRMJgz83eus-Qfv_uPDgR5BKUY'
+bot = telepot.Bot(TOKEN)
 MessageLoop(bot, handle).run_as_thread()
 print ('Listening ...')
 
