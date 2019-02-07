@@ -180,7 +180,10 @@ class nlp:
                         sql += " and %s in (%s)" % (entity, data)
                 print(sql)
                 reply = self.__get_reply(sql)
-                hasil.append(str(reply["tanggal"]))
+                if reply is None:
+                    hasil.append("Mohon maaf saya kurang tau")
+                else:
+                    hasil.append(str(reply["tanggal"]))
             elif (response["intent"] == "search_what"):
                 hari_raya = ""
                 if "hari_raya" in response:

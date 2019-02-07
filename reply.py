@@ -2,11 +2,6 @@ from nlp import nlp
 import time
 from connector import connector
 
-connection = connector().get_connection_object()
-cursor = connection.cursor(dictionary=True)
-nlp = nlp()
-
-
 def main():
     cursor.execute("SELECT * FROM tb_inbox WHERE flag='1'")
     inboxes = cursor.fetchall()
@@ -30,9 +25,11 @@ def main():
         # print(reply)
     connection.rollback()
 
-
-
 if __name__== "__main__":
+    connection = connector().get_connection_object()
+    cursor = connection.cursor(dictionary=True)
+    nlp = nlp()
+
     while 1:
         main()
         time.sleep(1)

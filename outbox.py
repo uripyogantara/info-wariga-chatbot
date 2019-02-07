@@ -3,9 +3,6 @@ import datetime
 import telepot
 from connector import connector
 
-
-
-
 def sendFileMsg(fname, chat_id):
     doc = open(fname,'rb')
     # send = bot.send_document(chat_id, doc)
