@@ -14,12 +14,18 @@ def main():
         # print(replies)
         id_inbox = inbox["id_inbox"]
         chat_id = inbox["chat_id"]
-        for reply in replies:
-            cursor.execute("INSERT INTO tb_outbox (id_inbox,chat_id, out_msg) VALUES ('%d', '%d','%s')" % (
-            id_inbox, chat_id, reply))
-            connection.commit()
-            print("%d -> %s" % (chat_id, reply))
 
+        if len(replies)>0:
+            for reply in replies:
+                cursor.execute("INSERT INTO tb_outbox (id_inbox,chat_id, out_msg) VALUES ('%d', '%d','%s')" % (
+                id_inbox, chat_id, reply))
+                connection.commit()
+                print("%d -> %s" % (chat_id, reply))
+        else:
+            cursor.execute("INSERT INTO tb_outbox (id_inbox,chat_id, out_msg) VALUES ('%d', '%d','%s')" % (
+                id_inbox, chat_id, "Mohon maaf saya kurang tau"))
+            connection.commit()
+            # print("%d -> %s" % (chat_id, reply))
         cursor.execute("UPDATE tb_inbox SET flag='2' WHERE id_inbox='%s'" % id_inbox)
         connection.commit()
         # print(reply)

@@ -1,6 +1,6 @@
 from nlp import nlp
 def main():
-    msg = "/start"
+    msg = "Kapan hari kemerdekaan Indonesia?"
     # msg.tolow
     tes=nlp()
     hasil=tes.get_reply(msg)
