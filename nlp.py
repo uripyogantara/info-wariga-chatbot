@@ -1,12 +1,36 @@
 from connector import connector
 import re
+import random
 from nltk.tokenize import MWETokenizer
 from pprint import pprint
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
-
-
+import date_format
 class nlp:
     def __init__(self):
+        self.formats = {
+            "hari_raya": [
+                "{0} itu hari {1}",
+                "setauku {0} hari {1}",
+                "owh kalo {0} hari {1}"
+            ],
+            "dewasa_ayu": [
+                "{1} bagus banget lo buat {0}",
+                "owh kalo {0} sebaiknya hari {1}",
+                "hari yang baik untuk {0} itu {1}"
+            ],
+            "not_found": [
+                "aku ga nemuin {0} yang kamu cari",
+                "sorry, kayaknya {0} yang kamu cari ngga ada",
+            ],
+            "default": [
+                "hmm aku ga ngerti",
+                "apa yaa",
+                "sorry aku masih goblok",
+                "maafkan kebodohanku",
+                "hehehe",
+                "aku kurang tau soal itu"
+            ]
+        }
         self.connection=connector().get_connection_object()
         self.cursor=self.connection.cursor(dictionary=True)
         self.cursor.execute("SELECT * FROM tag")
@@ -45,7 +69,6 @@ class nlp:
         self._padanan = {}
         for item in data:
             self._padanan[item["value"]] = item["default"]
-
 
     def __set_entities(self,data):
         entities={}
@@ -183,12 +206,15 @@ class nlp:
                 sql = "SELECT * FROM kalender WHERE tanggal>DATE(NOW())"
 
                 data_wariga=None
+                format=None
                 if "hari_raya" in response:
                     data_wariga=response["hari_raya"]
                     sql += " and " + self._basis_pengetahuan[response["hari_raya"]]
+                    format=random.choice(self.formats["hari_raya"])
                 elif "dewasa_ayu" in response:
                     data_wariga = "dewasa "+response["dewasa_ayu"]
                     sql += " and " + self._basis_pengetahuan[response["dewasa_ayu"]]
+                    format = random.choice(self.formats["dewasa_ayu"])
                 for entity in response["entities"]:
                     data = self.__join(response["entities"][entity]["data"])
 
@@ -199,11 +225,17 @@ class nlp:
                 # print(sql)
                 reply = self.__get_reply(sql)
                 if data_wariga is None and not response["entities"]:
-                    hasil.append("hmm aku ngga tau")
+                    format = random.choice(self.formats["default"])
+                    reply_format=format
+                    hasil.append(reply_format)
                 elif reply is None:
-                    hasil.append("sorry ya aku gak nemuin %s yang kamu cari"%data_wariga)
+                    format = random.choice(self.formats["not_found"])
+                    reply_format = format.format(data_wariga)
+                    hasil.append(reply_format)
                 else:
-                    hasil.append(reply["tanggal"].strftime("%A, %d %B %Y"))
+                    reply_format = format.format(data_wariga,date_format.toId(reply["tanggal"]))
+                    hasil.append(reply_format)
+                    # hasil.append()
             elif (response["intent"] == "search_what"):
                 hari_raya = ""
                 if "hari_raya" in response:
@@ -214,6 +246,11 @@ class nlp:
                 greeting=self._basis_pengetahuan_greeting[response['greeting']]
                 # print(response["greeting"])
                 hasil.append(greeting)
+            elif response["intent"] is None:
+                format = random.choice(self.formats["default"])
+                reply_format = format
+                hasil.append(reply_format)
+
 
         return hasil
 
