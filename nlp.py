@@ -4,6 +4,7 @@ from nltk.tokenize import MWETokenizer
 from pprint import pprint
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
+
 class nlp:
     def __init__(self):
         self.connection=connector().get_connection_object()
@@ -79,8 +80,22 @@ class nlp:
         return enr
 
     def __get_padanan(self,value):
-        if value in self._padanan:
-            return self._padanan[value]
+        bulan={
+            'januari':'1',
+            'februari':'2',
+            'maret':'3',
+            'april':'4',
+            'mei':'5',
+            'juni':'6',
+            'juli':'7',
+            'agustus':'8',
+            'september': '9',
+            'oktober': '10',
+            'november': '11',
+            'desember': '12',
+        }
+        if value in bulan:
+            return bulan[value]
         else:
             return value
 
@@ -142,7 +157,7 @@ class nlp:
                 negation = True
 
             if val not in ["what", "when", "hari_raya", "dewasa_ayu", "negation","greeting"]:
-                print(responses[index]["intent"],key)
+                # print(responses[index]["intent"],key)
                 if responses[len(responses)-1]["intent"]=="greeting":
                     print("append")
                     responses.append({
@@ -167,9 +182,12 @@ class nlp:
             if (response["intent"] == "search_when"):
                 sql = "SELECT * FROM kalender WHERE tanggal>DATE(NOW())"
 
+                data_wariga=None
                 if "hari_raya" in response:
+                    data_wariga=response["hari_raya"]
                     sql += " and " + self._basis_pengetahuan[response["hari_raya"]]
                 elif "dewasa_ayu" in response:
+                    data_wariga = "dewasa "+response["dewasa_ayu"]
                     sql += " and " + self._basis_pengetahuan[response["dewasa_ayu"]]
                 for entity in response["entities"]:
                     data = self.__join(response["entities"][entity]["data"])
@@ -178,12 +196,14 @@ class nlp:
                         sql += " and %s not in (%s)" % (entity, data)
                     else:
                         sql += " and %s in (%s)" % (entity, data)
-                print(sql)
+                # print(sql)
                 reply = self.__get_reply(sql)
-                if reply is None:
-                    hasil.append("Mohon maaf saya kurang tau")
+                if data_wariga is None and not response["entities"]:
+                    hasil.append("hmm aku ngga tau")
+                elif reply is None:
+                    hasil.append("sorry ya aku gak nemuin %s yang kamu cari"%data_wariga)
                 else:
-                    hasil.append(str(reply["tanggal"]))
+                    hasil.append(reply["tanggal"].strftime("%A, %d %B %Y"))
             elif (response["intent"] == "search_what"):
                 hari_raya = ""
                 if "hari_raya" in response:
@@ -213,12 +233,23 @@ class nlp:
         self.connection.rollback()
         return data
 
-    def get_reply(self,msg):
+    def _padanan_kata(self,token):
+        for key, value in enumerate(token):
+            if value in self._padanan:
+                token[key]= self._padanan[value]
 
+    # def _get_response(self,):
+
+    def get_reply(self,msg):
+        # pprint(self._padanan)
         stemming=self.__stemming(msg)
         print(stemming)
         token=self.__tokenize(stemming)
         print(token)
+
+        self._padanan_kata(token)
+
+        pprint(token)
         enr = self.__get_enr(token)
         responses = self.__get_response(enr)
 
