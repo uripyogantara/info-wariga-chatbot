@@ -2,7 +2,7 @@ day = {
     "Sunday":"Minggu",
     "Monday":"Senin",
     "Tuesday":"Selasa",
-    "Wednesay":"Rabu",
+    "Wednesday":"Rabu",
     "Thursday":"Kamis",
     "Friday":"Jumat",
     "Saturday":"Sabtu"
@@ -12,11 +12,13 @@ month = {
     "January":"",
     "February": "Februari",
     "March":"Maret",
+"April":"April",
     "May":"Mei",
     "June":"Juni",
     "July":"Juli",
     "August":"Agustus",
     "October":"Oktober",
+    "November":"November",
     "December":"Desember"
 }
 

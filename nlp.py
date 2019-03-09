@@ -10,13 +10,16 @@ class nlp:
         self.formats = {
             "hari_raya": [
                 "{0} itu hari {1}",
-                "setauku {0} hari {1}",
                 "owh kalo {0} hari {1}"
             ],
             "dewasa_ayu": [
                 "{1} bagus banget lo buat {0}",
                 "owh kalo {0} sebaiknya hari {1}",
                 "hari yang baik untuk {0} itu {1}"
+            ],
+            "wariga": [
+                "oh itu {0}{1}",
+                "{0} kalo itu{1}"
             ],
             "not_found": [
                 "aku ga nemuin {0} yang kamu cari",
@@ -215,6 +218,8 @@ class nlp:
                     data_wariga = "dewasa "+response["dewasa_ayu"]
                     sql += " and " + self._basis_pengetahuan[response["dewasa_ayu"]]
                     format = random.choice(self.formats["dewasa_ayu"])
+                else:
+                    format = random.choice(self.formats["wariga"])
                 for entity in response["entities"]:
                     data = self.__join(response["entities"][entity]["data"])
 
@@ -222,8 +227,9 @@ class nlp:
                         sql += " and %s not in (%s)" % (entity, data)
                     else:
                         sql += " and %s in (%s)" % (entity, data)
-                # print(sql)
+                print(sql)
                 reply = self.__get_reply(sql)
+                print(reply)
                 if data_wariga is None and not response["entities"]:
                     format = random.choice(self.formats["default"])
                     reply_format=format

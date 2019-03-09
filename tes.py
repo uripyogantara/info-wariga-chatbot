@@ -2,7 +2,7 @@ from nlp import nlp
 
 
 def main():
-    msg = "carikan saya dewasa nikah"
+    msg = "carikan purnama kaenam"
     # msg.tolow
     tes=nlp()
     hasil=tes.get_reply(msg)
