@@ -11,16 +11,16 @@ class nlp:
             "hari_raya": [
                 "{0} itu hari {1}",
                 "nyari {0} ya, itu hari {1}",
-                "{0} itu hari {1}"
+                "{0} yang kamu cari itu hari {1}"
             ],
             "dewasa_ayu": [
                 "{1} bagus banget lo buat {0}",
                 "owh kalo {0} sebaiknya hari {1}",
-                "hari yang baik untuk {0} itu {1}, btw selamat {0} ya"
+                "hari yang baik untuk {0} itu {1}"
             ],
             "wariga": [
                 "oh itu {0}{1}",
-                "{0} kalo itu{1}"
+                "{0}kalo itu {1}"
             ],
             "not_found": [
                 "aku ga nemuin hari {0} yang kamu cari",
@@ -28,11 +28,9 @@ class nlp:
             ],
             "default": [
                 "hmm aku ga ngerti",
-                "apa yaa",
-                "sorry aku masih goblok",
-                "maafkan kebodohanku",
                 "hehehe",
-                "aku kurang tau soal itu"
+                "aku kurang tau soal itu",
+                "tanya yang lain dong, aku ga ngerti",
             ]
         }
         self.connection=connector().get_connection_object()
@@ -95,6 +93,9 @@ class nlp:
         tokenizer = MWETokenizer()
         tokenizer.add_mwe(("buda", "wage"))
         tokenizer.add_mwe(("tanggal", "berapa"))
+        tokenizer.add_mwe(("tampah", "galungan"))
+        tokenizer.add_mwe(("tebang", "pohon"))
+        tokenizer.add_mwe(("bangun", "rumah"))
         token = tokenizer.tokenize(msg.split())
         return token
 
@@ -158,8 +159,15 @@ class nlp:
                         item["intent"] = "search_what"
             elif val == "greeting":
                 index+=1
-                responses[index]["intent"]="greeting"
-                responses[index]["greeting"] = key
+                if index>= len(responses):
+                    responses.append({
+                        "intent": "greeting",
+                        "greeting": key
+                    })
+                else:
+
+                    responses[index]["intent"]="greeting"
+                    responses[index]["greeting"] = key
             elif val == "hari_raya":
                 # apabila menemukan hari raya maka akan membuat array baru
                 index += 1
@@ -241,7 +249,7 @@ class nlp:
                     reply_format = format.format(data_wariga)
                     hasil.append(reply_format)
                 else:
-                    reply_format = format.format(data_wariga,date_format.toId(reply["tanggal"]))
+                    reply_format = format.format(self.to_string(data_wariga),date_format.toId(reply["tanggal"]))
                     hasil.append(reply_format)
                     # hasil.append()
             elif (response["intent"] == "search_what"):
@@ -303,4 +311,9 @@ class nlp:
 
         return result
 
+    def to_string(self, string):
+        if string is None:
+            return ''
+        else:
+            return str(string)
 
