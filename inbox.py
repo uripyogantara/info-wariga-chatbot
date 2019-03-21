@@ -10,7 +10,7 @@ def handle(msg):
     user=msg['from']
     print(user)
 
-    insert_user(user['id'],user['first_name'],user['last_name'],user['username'])
+    # insert_user(user['id'],user['first_name'],user['last_name'],user['username'])
 
     if content_type == 'text':
         pesan = msg['text'].lower()

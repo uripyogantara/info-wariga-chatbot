@@ -2,7 +2,7 @@ from nlp import nlp
 
 
 def main():
-    msg = "carikan purnama kaenam"
+    msg = "dewasa nak nganten dong kak "
     # msg.tolow
     tes=nlp()
     hasil=tes.get_reply(msg)
@@ -13,5 +13,3 @@ def main():
 
 if __name__== "__main__":
     main()
-
-

@@ -9,7 +9,7 @@ day = {
 }
 
 month = {
-    "January":"",
+    "January":"Januari",
     "February": "Februari",
     "March":"Maret",
 "April":"April",
@@ -17,11 +17,11 @@ month = {
     "June":"Juni",
     "July":"Juli",
     "August":"Agustus",
+    "September":"September",
     "October":"Oktober",
     "November":"November",
     "December":"Desember"
 }
-
 
 def toId(date):
     hari=day[date.strftime("%A")]

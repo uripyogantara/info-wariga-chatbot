@@ -10,20 +10,21 @@ class nlp:
         self.formats = {
             "hari_raya": [
                 "{0} itu hari {1}",
-                "owh kalo {0} hari {1}"
+                "nyari {0} ya, itu hari {1}",
+                "{0} itu hari {1}"
             ],
             "dewasa_ayu": [
                 "{1} bagus banget lo buat {0}",
                 "owh kalo {0} sebaiknya hari {1}",
-                "hari yang baik untuk {0} itu {1}"
+                "hari yang baik untuk {0} itu {1}, btw selamat {0} ya"
             ],
             "wariga": [
                 "oh itu {0}{1}",
                 "{0} kalo itu{1}"
             ],
             "not_found": [
-                "aku ga nemuin {0} yang kamu cari",
-                "sorry, kayaknya {0} yang kamu cari ngga ada",
+                "aku ga nemuin hari {0} yang kamu cari",
+                "sorry, kayaknya hari {0} yang kamu cari ngga ada",
             ],
             "default": [
                 "hmm aku ga ngerti",
@@ -93,6 +94,7 @@ class nlp:
         msg = re.sub(r'[^\w]', ' ', msg)
         tokenizer = MWETokenizer()
         tokenizer.add_mwe(("buda", "wage"))
+        tokenizer.add_mwe(("tanggal", "berapa"))
         token = tokenizer.tokenize(msg.split())
         return token
 
@@ -182,7 +184,7 @@ class nlp:
             elif val in ["negation"]:
                 negation = True
 
-            if val not in ["what", "when", "hari_raya", "dewasa_ayu", "negation","greeting"]:
+            if val not in ["what", "when", "hari_raya", "dewasa_ayu", "negation","greeting","bye"]:
                 # print(responses[index]["intent"],key)
                 if responses[len(responses)-1]["intent"]=="greeting":
                     print("append")
@@ -215,7 +217,7 @@ class nlp:
                     sql += " and " + self._basis_pengetahuan[response["hari_raya"]]
                     format=random.choice(self.formats["hari_raya"])
                 elif "dewasa_ayu" in response:
-                    data_wariga = "dewasa "+response["dewasa_ayu"]
+                    data_wariga = response["dewasa_ayu"]
                     sql += " and " + self._basis_pengetahuan[response["dewasa_ayu"]]
                     format = random.choice(self.formats["dewasa_ayu"])
                 else:
@@ -243,7 +245,7 @@ class nlp:
                     hasil.append(reply_format)
                     # hasil.append()
             elif (response["intent"] == "search_what"):
-                hari_raya = ""
+                hari_raya = random.choice(self.formats["default"])
                 if "hari_raya" in response:
                     hari_raya=self._basis_pengetahuan_apa[response['hari_raya']]
                 hasil.append(hari_raya)
@@ -298,6 +300,7 @@ class nlp:
 
         pprint(responses)
         result=self.__result(responses)
+
         return result
 
 
