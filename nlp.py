@@ -96,6 +96,7 @@ class nlp:
         tokenizer.add_mwe(("tampah", "galungan"))
         tokenizer.add_mwe(("tebang", "pohon"))
         tokenizer.add_mwe(("bangun", "rumah"))
+        tokenizer.add_mwe(("potong", "gigi"))
         token = tokenizer.tokenize(msg.split())
         return token
 
