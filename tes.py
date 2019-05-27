@@ -11,15 +11,15 @@ def main():
     #     print(i,number)
     # number=number-4+1
     # print(number)
-    msg = "Saya rencananya mau menikah tahun 2021, sekitar bulan november atau desember lah, bagusnya kapan ya, tapi jangan yang hari senin?"
+    msg = "/start"
     # msg.tolow
-    # tes=nlp()
-    # hasil=tes.get_reply(msg)
+    tes=nlp()
+    hasil=tes.get_reply(msg)
     #
-    # for item in hasil:
-    #     print(item)
+    for item in hasil:
+        print(item)
     print(msg)
-
+#
 
 if __name__== "__main__":
     main()
