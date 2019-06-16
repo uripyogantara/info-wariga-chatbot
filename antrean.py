@@ -2,7 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 from mysql.connector import pooling
 
-class mojodomo:
+class antrean:
     def __init__(self,host):
         try:
             self.host=host
@@ -19,19 +19,17 @@ class mojodomo:
         except Error as e:
             print("Error while connecting to MySQL using Connection pool ", e)
 
-    def get_antrean(self,antrean):
-        self.cursor.execute("SELECT * FROM tb_inbox WHERE flag IN('4')")
-        data=self.cursor.fetchall()
+    def get_antrean(self):
+        self.cursor.execute("SELECT * FROM tb_inbox WHERE flag IN('5')")
+        antrean=self.cursor.fetchall()
 
-        for item in data:
-            antrean.append(item)
-
-        sql = "UPDATE tb_inbox SET flag='0' where flag IN ('4')"
+        sql = "UPDATE tb_inbox SET flag='0' where flag IN ('5')"
         self.cursor.execute(sql)
         self.connection.commit()
-        # return antrean
+        return antrean
 
     def distribute(self,antrean):
+        id_inbox=[]
         self.cursor.execute("SELECT COUNT(*) as jumlah FROM tb_inbox WHERE flag IN('1','2','3')")
         result=self.cursor.fetchone()
         if result['jumlah']>= self.host['batas_atas']:
@@ -42,7 +40,6 @@ class mojodomo:
             for index,antrean_item in enumerate(antrean):
                 if index<selisih:
                     sql = "INSERT INTO tb_inbox (chat_id, in_msg) VALUES (%s, %s)"
-                    # print("antrean item",antrean_item)
                     data=(
                         antrean_item["chat_id"],
                         antrean_item["in_msg"],
@@ -50,15 +47,11 @@ class mojodomo:
 
                     self.cursor.execute(sql,data)
                     self.connection.commit()
-                    del antrean[index]
-                    print(antrean)
+                    id_inbox.append(antrean_item['id_inbox'])
                 else:
                     break
-        # return antrean
-        # return result['jumlah']
         self.connection.rollback()
-
-    # def distribute(self,antrean):
+        return id_inbox
 
 
     def __del__(self):
