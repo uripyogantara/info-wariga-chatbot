@@ -11,14 +11,14 @@ def main():
     #     print(i,number)
     # number=number-4+1
     # print(number)
-    msg = "/start"
+    msg = "kapan galungan 2020?"
     # msg.tolow
     tes=nlp()
     hasil=tes.get_reply(msg)
     #
     for item in hasil:
         print(item)
-    print(msg)
+    # print(msg)
 #
 
 if __name__== "__main__":

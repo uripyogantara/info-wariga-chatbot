@@ -75,7 +75,6 @@ class nlp:
     def __set_entities(self,data):
         entities={}
         for item in data:
-            # print(item)
             entities[item["word"]]=item["tag"]
 
         self._entities=entities
@@ -194,14 +193,11 @@ class nlp:
                 negation = True
 
             if val not in ["what", "when", "hari_raya", "dewasa_ayu", "negation","greeting","bye"]:
-                # print(responses[index]["intent"],key)
                 if responses[len(responses)-1]["intent"]=="greeting":
-                    print("append")
                     responses.append({
                         "intent": None,
                         "entities": {}
                     })
-                    # print(responses)
 
                 if val in responses[len(responses)-1]["entities"]:
                     responses[len(responses)-1]["entities"][val]["data"].append(key)
@@ -217,30 +213,47 @@ class nlp:
 
         for response in responses:
             if (response["intent"] == "search_when"):
-                sql = "SELECT * FROM kalender WHERE tanggal>DATE(NOW())"
+
+
+                params=""
 
                 data_wariga=None
                 format=None
                 if "hari_raya" in response:
                     data_wariga=response["hari_raya"]
-                    sql += " and " + self._basis_pengetahuan[response["hari_raya"]]
+                    params += " and " + self._basis_pengetahuan[response["hari_raya"]]
                     format=random.choice(self.formats["hari_raya"])
                 elif "dewasa_ayu" in response:
                     data_wariga = response["dewasa_ayu"]
-                    sql += " and " + self._basis_pengetahuan[response["dewasa_ayu"]]
+                    params += " and " + self._basis_pengetahuan[response["dewasa_ayu"]]
                     format = random.choice(self.formats["dewasa_ayu"])
                 else:
                     format = random.choice(self.formats["wariga"])
+
+                if "bulan" in response["entities"]:
+                    sql = "SELECT * FROM kalender WHERE tahun=YEAR(now())"
+                    all=True
+                elif "tahun" in response["entities"]:
+                    sql = "SELECT * FROM kalender WHERE id>0"
+                    all = True
+                else:
+                    sql = "SELECT * FROM kalender WHERE tanggal>DATE(NOW())"
+                    all=False
+
                 for entity in response["entities"]:
                     data = self.__join(response["entities"][entity]["data"])
 
                     if response["entities"][entity]["negation"]==True:
-                        sql += " and %s not in (%s)" % (entity, data)
+                        params += " and %s not in (%s)" % (entity, data)
                     else:
-                        sql += " and %s in (%s)" % (entity, data)
+                        params += " and %s in (%s)" % (entity, data)
+
+
+                sql+=params
                 print(sql)
-                reply = self.__get_reply(sql)
-                print(reply)
+
+
+                reply = self.__get_reply(sql,all)
                 if data_wariga is None and not response["entities"]:
                     format = random.choice(self.formats["default"])
                     reply_format=format
@@ -250,7 +263,7 @@ class nlp:
                     reply_format = format.format(data_wariga)
                     hasil.append(reply_format)
                 else:
-                    reply_format = format.format(self.to_string(data_wariga),date_format.toId(reply["tanggal"]))
+                    reply_format = format.format(self.to_string(data_wariga),reply)
                     hasil.append(reply_format)
                     # hasil.append()
             elif (response["intent"] == "search_what"):
@@ -258,10 +271,9 @@ class nlp:
                 if "hari_raya" in response:
                     hari_raya=self._basis_pengetahuan_apa[response['hari_raya']]
                 hasil.append(hari_raya)
-                # print(response)
+
             elif (response["intent"] == "greeting"):
                 greeting=self._basis_pengetahuan_greeting[response['greeting']]
-                # print(response["greeting"])
                 hasil.append(greeting)
             elif response["intent"] is None:
                 format = random.choice(self.formats["default"])
@@ -281,11 +293,23 @@ class nlp:
                 sql += item
         return sql
 
-    def __get_reply(self,sql):
+    def __get_reply(self,sql,all):
         self.cursor.execute(sql)
-        data=self.cursor.fetchone()
+        reply=""
+        if all:
+            data = self.cursor.fetchall()
+            print(data)
+
+            if(len(data)==0):
+                reply=None
+            for item in data:
+                reply += "\n" + date_format.toId(item["tanggal"])
+        else:
+            data=self.cursor.fetchone()
+            reply=date_format.toId(data["tanggal"])
+
         self.connection.rollback()
-        return data
+        return reply
 
     def _padanan_kata(self,token):
         for key, value in enumerate(token):
@@ -295,15 +319,11 @@ class nlp:
     # def _get_response(self,):
 
     def get_reply(self,msg):
-        # pprint(self._padanan)
         stemming=self.__stemming(msg)
-        print(stemming)
         token=self.__tokenize(stemming)
-        print(token)
 
         self._padanan_kata(token)
 
-        pprint(token)
         enr = self.__get_enr(token)
         responses = self.__get_response(enr)
 
