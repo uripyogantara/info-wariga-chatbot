@@ -22,16 +22,16 @@ class antrean:
     def get_antrean(self):
         self.cursor.execute("SELECT * FROM tb_inbox WHERE flag IN('5')")
         antrean=self.cursor.fetchall()
-
         sql = "UPDATE tb_inbox SET flag='0' where flag IN ('5')"
         self.cursor.execute(sql)
         self.connection.commit()
         return antrean
 
     def distribute(self,antrean):
-        id_inbox=[]
+        id_antrean=[]
         self.cursor.execute("SELECT COUNT(*) as jumlah FROM tb_inbox WHERE flag IN('1','2','3')")
         result=self.cursor.fetchone()
+
         if result['jumlah']>= self.host['batas_atas']:
             print("server %d penuh"%self.host['id_host'])
         else:
@@ -47,12 +47,12 @@ class antrean:
 
                     self.cursor.execute(sql,data)
                     self.connection.commit()
-                    id_inbox.append(antrean_item['id_inbox'])
+                    del antrean[index]
+                    id_antrean.append(antrean_item['id_inbox'])
                 else:
                     break
         self.connection.rollback()
-        return id_inbox
-
+        return id_antrean
 
     def __del__(self):
         self.cursor.close()

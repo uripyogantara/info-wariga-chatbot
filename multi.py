@@ -19,6 +19,7 @@ def xstr(data):
         return str(data)
 
 def main():
+    global antrean
     for host in hosts:
         data=antrean(host)
         antrean=data.get_antrean()

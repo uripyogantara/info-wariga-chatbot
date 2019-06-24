@@ -3,7 +3,7 @@ from mysql.connector import Error
 from mysql.connector import pooling
 from mysql.connector import Error
 import time
-from antrean import mojodomo
+from antrean import antrean
 connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_name="mojodomo",
                                                               pool_reset_session=True,
                                                               host='localhost',
@@ -18,20 +18,11 @@ hosts=cursor.fetchall()
 
 def distribute_message():
     cursor.execute("SELECT * FROM tb_inbox WHERE flag='1'")
-
     antrean=cursor.fetchall()
-    print(antrean)
     for host in hosts:
-        data = mojodomo(host)
+        data = antrean(host)
         id_inbox=data.distribute(antrean)
-        # print(id_inbox)
         update_inbox(id_inbox)
-    # for row in cursor.fetchall():
-    #     try:
-    #         cursor.execute("UPDATE tb_outbox SET flag='4' WHERE id_inbox='%s'" % row["id_inbox"])
-    #         connection.commit()
-    #     except:
-    #         print("Error Update")
     connection.rollback()
 
 def update_inbox(id_inbox):
@@ -48,7 +39,5 @@ if __name__ == '__main__':
     while True:
         # main()
         distribute_message()
-        # print("check",antrean)
-        # store_antrean()
         time.sleep(2)
 
